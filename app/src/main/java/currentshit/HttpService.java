@@ -1,10 +1,10 @@
 package currentshit;
 
 import java.net.InetSocketAddress;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.io.OutputStream;
 
 import com.sun.net.httpserver.*;
 
@@ -49,17 +49,26 @@ public class HttpService {
         return HttpService.instance;
     }
 
-    public static boolean sendErrorResponse(HttpExchange exchange, int status, byte[] data){
+    public static boolean sendErrorResponse(HttpExchange exchange, int status, String contentType, byte[] buffer){
+        return HttpService.serve(exchange, status, contentType, buffer);
+    }
+
+    public static boolean serve(HttpExchange exchange, int status, String contentType, byte[] buffer) {
+        if(contentType == null){
+            contentType = "text/html";
+        }
         try{
-        exchange.sendResponseHeaders(status, data.length);
-        OutputStream out = exchange.getResponseBody();
-        out.write(data);
-        out.flush();
+            exchange.getResponseHeaders().add("Content-Length", ""+buffer.length);
+            exchange.sendResponseHeaders(status, buffer.length);
+            DataOutputStream out = new DataOutputStream(exchange.getResponseBody());
+            for(byte b : buffer){
+                out.writeByte(b);
+            }
+            out.flush();
         }catch(IOException e){
             e.printStackTrace();
             return false;
         }
-        exchange.close();
         return true;
     }
 
@@ -67,9 +76,82 @@ public class HttpService {
 
     public HttpService(int port) throws IOException {
         this.server = HttpServer.create(new InetSocketAddress(port), 0);
-        this.server.createContext("/", new StaticHandler());
+        this.server.createContext("/", new LogHandler(new StaticHandler()));
+        this.server.createContext("/login", new LogHandler(new LoginHandler()));
+        this.server.createContext("/register", new LogHandler(new RegisterHandler()));
         this.server.start();
     }
+
+}
+
+class LogHandler implements HttpHandler {
+
+    private final HttpHandler next;
+
+    public LogHandler(HttpHandler next) {
+        this.next = next;
+    }
+
+    public void handle(HttpExchange exchange) throws IOException {
+        System.out.println("Received request: " + exchange.getRequestURI().getPath() + " METHOD: " + exchange.getRequestMethod());
+        this.next.handle(exchange);
+    }
+    
+}
+
+class LoginHandler implements HttpHandler {
+
+    private final HttpHandler next;
+
+    public LoginHandler(HttpHandler next) {
+        this.next = next;
+    }
+
+    public void handle(HttpExchange exchange) throws IOException {
+        if(exchange.getRequestMethod().equals("GET")){
+            if(!exchange.getRequestURI().getPath().equals("/login")){
+                next.handle(exchange);
+                return;
+            }
+            File file = new File(HttpService.rootDirectory + "/login.html");
+            byte[] buffer = new byte[(int)file.length()];
+            boolean success = FileManager.tryGetFile(file, buffer);
+            if(!success){
+                HttpService.sendErrorResponse(exchange, 404, null, "File Not Found.".getBytes());
+                return;
+            }
+            HttpService.serve(exchange, 200, null, buffer);
+            return;
+        }
+    }
+
+}
+
+class RegisterHandler implements HttpHandler {
+
+    private final HttpHandler next;
+
+    public RegisterHandler(HttpHandler next) {
+        this.next = next;
+    }
+
+    public void handle(HttpExchange exchange) throws IOException {
+        if(exchange.getRequestMethod().equals("GET")){
+            if(!exchange.getRequestURI().getPath().equals("/register")){
+                next.handle(exchange);
+                return;
+            }
+            File file = new File(HttpService.rootDirectory + "/register.html");
+            byte[] buffer = new byte[(int)file.length()];
+            boolean success = FileManager.tryGetFile(file, buffer);
+            if(!success){
+                HttpService.sendErrorResponse(exchange, 404, null, "File Not Found.".getBytes());
+                return;
+            }
+            HttpService.serve(exchange, 200, null, buffer);
+            return;
+        }
+    }    
 
 }
 
@@ -77,10 +159,9 @@ class StaticHandler implements HttpHandler {
 
     public void handle(HttpExchange exchange) throws IOException {
         if(!exchange.getRequestMethod().equals("GET")){
-            HttpService.sendErrorResponse(exchange, 405, "Method Not Allowed".getBytes());
+            HttpService.sendErrorResponse(exchange, 405, null, "Method Not Allowed".getBytes());
             return;
         }
-
         String path = exchange.getRequestURI().getPath();
         if(!path.startsWith("/")){
             path = "/" + path;
@@ -91,34 +172,32 @@ class StaticHandler implements HttpHandler {
         }
 
         File file = new File(HttpService.rootDirectory + path);
-        System.out.println("Trying to send file: " + file.getAbsolutePath());
         if(!file.exists()) {
-            HttpService.sendErrorResponse(exchange, 404, "File Not Found.".getBytes());
+            HttpService.sendErrorResponse(exchange, 404, null, "File Not Found.".getBytes());
             return;
         }
         if(file.isDirectory()){
-            HttpService.sendErrorResponse(exchange, 404, "File Not Found.".getBytes());
+            HttpService.sendErrorResponse(exchange, 404, null, "File Not Found.".getBytes());
             return;
         }
         if(!file.isFile()){
-            HttpService.sendErrorResponse(exchange, 404, "File Not Found.".getBytes());
+            HttpService.sendErrorResponse(exchange, 404, null, "File Not Found.".getBytes());
             return;
         }
 
         byte[] buffer = new byte[(int)file.length()];
         boolean success = FileManager.tryGetFile(file, buffer);
         if(!success){
-            HttpService.sendErrorResponse(exchange, 500, "Internal Server Error.".getBytes());
+            HttpService.sendErrorResponse(exchange, 500, null, "Internal Server Error.".getBytes());
             return;
         }
 
         String fileExtension = FileManager.getExtension(file);
 
-        exchange.sendResponseHeaders(200, buffer.length);
-        exchange.getResponseHeaders().add("Content-Type", HttpService.MIME.get(fileExtension));
-        OutputStream out = exchange.getResponseBody();
-        out.write(buffer);
-        out.flush();
+        HttpService.serve(exchange, 200, HttpService.MIME.get(fileExtension), buffer);
+
+        // TO-DO: Check for keep-alive header.
+
         exchange.close();
     }
     
