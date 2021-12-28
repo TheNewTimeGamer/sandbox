@@ -19,9 +19,9 @@ public class Posts {
     private Posts() {}
 
     public static PostField[] get(String[] tags) {
-        MongoDatabase db = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME);
+        MongoDatabase db = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME).withCodecRegistry(MongoService.pojoCodecRegistry);
         MongoCollection<PostField> collection = db.getCollection(MongoService.COLLECTION_POSTS, PostField.class);
-        MongoCursor<PostField> cursor = collection.find(Filters.in("tags", Arrays.asList(tags))).iterator();
+        MongoCursor<PostField> cursor = collection.find(Filters.in("tags", tags)).iterator();
         ArrayList<PostField> documents = new ArrayList<PostField>();
         while(cursor.hasNext()) {
             documents.add(cursor.next());
@@ -30,13 +30,13 @@ public class Posts {
     }
 
     public static PostField getByID(ObjectId postID) {
-        MongoDatabase db = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME);
+        MongoDatabase db = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME).withCodecRegistry(MongoService.pojoCodecRegistry);
         MongoCollection<PostField> collection = db.getCollection(MongoService.COLLECTION_POSTS, PostField.class);
         return collection.find(Filters.eq("_id",postID)).first();
     }
 
     public static PostField[] getByUserID(ObjectId userID) {
-        MongoDatabase db = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME);
+        MongoDatabase db = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME).withCodecRegistry(MongoService.pojoCodecRegistry);
         MongoCollection<PostField> collection = db.getCollection(MongoService.COLLECTION_POSTS, PostField.class);
         MongoCursor<PostField> cursor = collection.find(Filters.eq("userID", userID)).iterator();
         ArrayList<PostField> documents = new ArrayList<PostField>();
@@ -49,7 +49,7 @@ public class Posts {
     public static boolean create(String title, String userID, String content, String[] tags) {
         try{
             PostField postField = new PostField(title, userID, content, 0, "", tags);
-            MongoDatabase database = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME);
+            MongoDatabase database = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME).withCodecRegistry(MongoService.pojoCodecRegistry);
             MongoCollection<PostField> collection = database.getCollection(MongoService.COLLECTION_POSTS, PostField.class);
             collection.insertOne(postField);
 

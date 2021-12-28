@@ -17,13 +17,13 @@ public class Comments {
     private Comments() {}
 
     public static CommentField getByID(ObjectId commentID) {
-        MongoDatabase db = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME);
+        MongoDatabase db = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME).withCodecRegistry(MongoService.pojoCodecRegistry);
         MongoCollection<CommentField> collection = db.getCollection(MongoService.COLLECTION_COMMENTS, CommentField.class);
         return collection.find(Filters.eq("_id", commentID)).first();
     }
 
     public static CommentField[] getByUserID(ObjectId userID) {
-        MongoDatabase db = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME);
+        MongoDatabase db = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME).withCodecRegistry(MongoService.pojoCodecRegistry);
         MongoCollection<CommentField> collection = db.getCollection(MongoService.COLLECTION_COMMENTS, CommentField.class);
         MongoCursor<CommentField> cursor = collection.find(Filters.eq("userID", userID)).iterator();
         ArrayList<CommentField> documents = new ArrayList<CommentField>();
@@ -34,7 +34,7 @@ public class Comments {
     }
 
     public static CommentField[] getByPostID(ObjectId postID) {
-        MongoDatabase db = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME);
+        MongoDatabase db = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME).withCodecRegistry(MongoService.pojoCodecRegistry);
         MongoCollection<CommentField> collection = db.getCollection(MongoService.COLLECTION_COMMENTS, CommentField.class);
         MongoCursor<CommentField> cursor = collection.find(Filters.eq("postID", postID)).iterator();
         ArrayList<CommentField> documents = new ArrayList<CommentField>();
@@ -47,7 +47,7 @@ public class Comments {
     public static boolean create(String name, ObjectId userID, ObjectId postID, String data) {
         try{
             CommentField commentField = new CommentField(userID, postID, data);
-            MongoDatabase database = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME);
+            MongoDatabase database = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME).withCodecRegistry(MongoService.pojoCodecRegistry);
             MongoCollection collection = database.getCollection(MongoService.COLLECTION_COMMENTS);
             collection.insertOne(commentField);
 
