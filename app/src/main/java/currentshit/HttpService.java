@@ -8,6 +8,7 @@ import java.util.HashMap;
 
 import com.sun.net.httpserver.*;
 
+import currentshit.handlers.ApiHandler;
 import currentshit.util.FileManager;
 
 public class HttpService {
@@ -65,6 +66,7 @@ public class HttpService {
                 out.writeByte(b);
             }
             out.flush();
+            out.close();
         }catch(IOException e){
             e.printStackTrace();
             return false;
@@ -77,8 +79,9 @@ public class HttpService {
     public HttpService(int port) throws IOException {
         this.server = HttpServer.create(new InetSocketAddress(port), 0);
         this.server.createContext("/", new LogHandler(new StaticHandler()));
-        this.server.createContext("/login", new LogHandler(new LoginHandler()));
-        this.server.createContext("/register", new LogHandler(new RegisterHandler()));
+        this.server.createContext("/login", new LogHandler(new LoginHandler(null)));
+        this.server.createContext("/register", new LogHandler(new RegisterHandler(null)));
+        this.server.createContext("/api", new LogHandler(new ApiHandler(null)));
         this.server.start();
     }
 

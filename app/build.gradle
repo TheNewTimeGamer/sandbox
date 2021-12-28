@@ -26,6 +26,9 @@ dependencies {
     // https://mvnrepository.com/artifact/org.mongodb/mongo-java-driver
     implementation 'org.mongodb:mongo-java-driver:3.12.10'
 
+    // https://mvnrepository.com/artifact/com.google.code.gson/gson
+    implementation group: 'com.google.code.gson', name: 'gson', version: '2.8.9'
+
 }
 
 application {

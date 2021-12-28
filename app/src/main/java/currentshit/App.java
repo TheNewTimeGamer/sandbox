@@ -11,9 +11,23 @@ public class App {
     public static void main(String[] args) {
         System.out.print("Starting HttpService..");
         App.httpService = HttpService.start(80);
-        System.out.println(" Done!");
+        System.out.println(" Success!");
         System.out.print("Starting MongoService..");
         App.mongoService = MongoService.start("mongodb://127.0.0.1");
-        System.out.println(" Done!");
+        if(!App.mongoService.isConnected()) {
+            System.out.println(" Failed!");
+        }
+        System.out.println(" Success!");
     }
+
+    public static boolean TrySleep(int millis){
+        try{
+            Thread.sleep(millis);
+        }catch(Exception e){
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
 }
