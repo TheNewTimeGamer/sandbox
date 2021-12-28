@@ -8,8 +8,9 @@ import org.bson.Document;
 import currentshit.App;
 import currentshit.HttpService;
 import currentshit.MongoService;
+import currentshit.dao.PostField;
 import currentshit.dao.Posts;
-import currentshit.dao.Test;
+import currentshit.dao.UserField;
 import currentshit.dao.Users;
 
 import java.io.IOException;
@@ -28,12 +29,13 @@ public class ApiHandler implements HttpHandler {
         if(exchange.getRequestURI().getPath().equals("/api/users")){
             if(exchange.getRequestMethod().equals("GET")){
                 StringBuilder builder = new StringBuilder();
-                Users.UserField[] users = Users.get();
+                UserField[] users = Users.get();
                 if(users.length == 0){
                     builder.append("[]");
                 }else{
+                    Gson gson = new Gson();
                     for(int i = 0; i < users.length; i++){
-                        builder.append(users[i].toJson());
+                        builder.append(gson.toJson(users[i]));
                         if(i != users.length-1){
                             builder.append(",");
                         }
@@ -66,13 +68,14 @@ public class ApiHandler implements HttpHandler {
                     }
                 }
                 StringBuilder builder = new StringBuilder();
-                Document[] posts = Posts.get(tags);
+                PostField[] posts = Posts.get(tags);
                 System.out.println("found posts: " + posts.length);
                 if(posts.length == 0){
                     builder.append("[]");
                 }else{
+                    Gson gson = new Gson();
                     for(int i = 0; i < posts.length; i++){
-                        builder.append(posts[i].toJson());
+                        builder.append(gson.toJson(posts[i]));
                         if(i != posts.length-1){
                             builder.append(",");
                         }
