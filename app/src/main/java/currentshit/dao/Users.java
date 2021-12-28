@@ -16,14 +16,19 @@ public class Users {
     private Users(){}
 
     public static UserField[] get() {
-        MongoDatabase db = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME).withCodecRegistry(MongoService.pojoCodecRegistry);
-        MongoCollection<UserField> collection = db.getCollection(MongoService.COLLECTION_USERS, UserField.class);
-        MongoCursor<UserField> cursor = collection.find().iterator();
-        ArrayList<UserField> documents = new ArrayList<UserField>();
-        while(cursor.hasNext()) {
-            documents.add(cursor.next());
+        try{
+            MongoDatabase db = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME).withCodecRegistry(MongoService.pojoCodecRegistry);
+            MongoCollection<UserField> collection = db.getCollection(MongoService.COLLECTION_USERS, UserField.class);
+            MongoCursor<UserField> cursor = collection.find().iterator();
+            ArrayList<UserField> documents = new ArrayList<UserField>();
+            while(cursor.hasNext()) {
+                documents.add(cursor.next());
+            }
+            return documents.toArray(new UserField[documents.size()]);
+        }catch(Exception e) {
+            e.printStackTrace();
         }
-        return documents.toArray(new UserField[documents.size()]);
+        return null;
     }
 
     public static UserField getByID(ObjectId userID) {

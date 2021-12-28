@@ -16,6 +16,8 @@ public class UserField {
     public List<ObjectId> dislikes;
     public List<ObjectId> follows;
 
+    public UserField() {}
+
     public UserField(String name, String password, String email) {
         this.id = new ObjectId();
         this.name = name;
@@ -27,4 +29,17 @@ public class UserField {
         this.dislikes = Arrays.asList();
         this.follows = Arrays.asList();
     }
+
+    public UserField(ObjectId id, String name, String password, String email, List<ObjectId> posts, List<ObjectId> comments, List<ObjectId> likes, List<ObjectId> dislikes, List<ObjectId> follows) {
+        this.id = id;
+        this.name = name;
+        this.password = password;
+        this.email = email;
+        this.posts = posts;
+        this.comments = comments;
+        this.likes = likes;
+        this.dislikes = dislikes;
+        this.follows = follows;
+    }
+
 }

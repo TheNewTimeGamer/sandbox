@@ -8,11 +8,12 @@ public class CommentField {
     public ObjectId postID;
     public String text;
 
+    public CommentField() {}
+
     public CommentField(ObjectId userID, ObjectId postID, String text) {
         this.id = new ObjectId();
         this.userID = userID;
         this.postID = postID;
         this.text = text;
     }
-
 }
