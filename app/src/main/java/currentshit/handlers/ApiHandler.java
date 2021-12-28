@@ -8,8 +8,12 @@ import org.bson.Document;
 import currentshit.App;
 import currentshit.HttpService;
 import currentshit.MongoService;
+import currentshit.dao.Posts;
+import currentshit.dao.Test;
+import currentshit.dao.Users;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 
 public class ApiHandler implements HttpHandler {
@@ -24,7 +28,7 @@ public class ApiHandler implements HttpHandler {
         if(exchange.getRequestURI().getPath().equals("/api/users")){
             if(exchange.getRequestMethod().equals("GET")){
                 StringBuilder builder = new StringBuilder();
-                Document[] users = MongoService.getUsers();
+                Users.UserField[] users = Users.get();
                 if(users.length == 0){
                     builder.append("[]");
                 }else{
@@ -43,7 +47,7 @@ public class ApiHandler implements HttpHandler {
                     HttpService.sendErrorResponse(exchange, 400, null, "Missing username, password or email.".getBytes());
                     return;
                 }
-                App.mongoService.createUser(body.get("username"), body.get("password"), body.get("email"));
+                Users.create(body.get("username"), body.get("password"), body.get("email"));
                 HttpService.serve(exchange, 200, "text/plain", new String("Done!").getBytes());
             }
         }
@@ -62,7 +66,7 @@ public class ApiHandler implements HttpHandler {
                     }
                 }
                 StringBuilder builder = new StringBuilder();
-                Document[] posts = MongoService.getPosts(tags);
+                Document[] posts = Posts.get(tags);
                 System.out.println("found posts: " + posts.length);
                 if(posts.length == 0){
                     builder.append("[]");
@@ -87,7 +91,7 @@ public class ApiHandler implements HttpHandler {
                 }else{
                     tags = new String[]{body.get("tags")};
                 }
-                boolean success = App.mongoService.createPost(body.get("title"), body.get("userid"), body.get("content"), tags);
+                boolean success = Posts.create(body.get("title"), body.get("userid"), body.get("content"), tags);
                 HttpService.serve(exchange, 200, "text/plain", new String("Done! " + success).getBytes());
             }
         }
@@ -99,9 +103,4 @@ public class ApiHandler implements HttpHandler {
             }
         }
     }
-
-    public void serveUsers() {
-
-    }
-
 }

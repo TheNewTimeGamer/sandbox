@@ -16,67 +16,51 @@ public class Comments {
     
     private Comments() {}
 
-    public static CommentField getCommentByID(ObjectId commentID) {
+    public static CommentField getByID(ObjectId commentID) {
         MongoDatabase db = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME);
         MongoCollection<CommentField> collection = db.getCollection(MongoService.COLLECTION_COMMENTS, CommentField.class);
-        //CommentField comment = collection.find(commentID).first();
-        return null;
+        return collection.find(Filters.eq("_id", commentID)).first();
     }
 
-    public static CommentField getCommentsByUserID(ObjectId userID) {
+    public static CommentField[] getByUserID(ObjectId userID) {
         MongoDatabase db = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME);
         MongoCollection<CommentField> collection = db.getCollection(MongoService.COLLECTION_COMMENTS, CommentField.class);
-        //CommentField comment = collection.find(userID);
-        return null;
-    }
-
-    public static Document[] getCommentsByPostID(ObjectId postID) {
-        MongoDatabase db = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME);
-        MongoCollection<Document> collection = db.getCollection(MongoService.COLLECTION_COMMENTS);
-        MongoCursor<Document> cursor = collection.find(Filters.eq("postID", postID)).iterator();
-        ArrayList<Document> documents = new ArrayList<Document>();
+        MongoCursor<CommentField> cursor = collection.find(Filters.eq("userID", userID)).iterator();
+        ArrayList<CommentField> documents = new ArrayList<CommentField>();
         while(cursor.hasNext()) {
             documents.add(cursor.next());
         }
-        return documents.toArray(new Document[documents.size()]);
+        return documents.toArray(new CommentField[documents.size()]);
     }
 
-    public static boolean createComment(String name, ObjectId userID, ObjectId postID, String data) {
+    public static CommentField[] getByPostID(ObjectId postID) {
+        MongoDatabase db = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME);
+        MongoCollection<CommentField> collection = db.getCollection(MongoService.COLLECTION_COMMENTS, CommentField.class);
+        MongoCursor<CommentField> cursor = collection.find(Filters.eq("postID", postID)).iterator();
+        ArrayList<CommentField> documents = new ArrayList<CommentField>();
+        while(cursor.hasNext()) {
+            documents.add(cursor.next());
+        }
+        return documents.toArray(new CommentField[documents.size()]);
+    }
+
+    public static boolean create(String name, ObjectId userID, ObjectId postID, String data) {
         try{
             CommentField commentField = new CommentField(userID, postID, data);
             MongoDatabase database = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME);
             MongoCollection collection = database.getCollection(MongoService.COLLECTION_COMMENTS);
-            collection.insertOne(commentField.toDocument());
+            collection.insertOne(commentField);
+
+            MongoCollection userCollection = database.getCollection(MongoService.COLLECTION_USERS);
+            MongoCollection postCollection = database.getCollection(MongoService.COLLECTION_POSTS);
+
+            userCollection.updateOne(Filters.eq("userID",userID), new Document("$push", new Document("comments", commentField.id)));
+            postCollection.updateOne(Filters.eq("postID",postID), new Document("$push", new Document("comments", commentField.id)));
         }catch(Exception e){
+            e.printStackTrace();
             return false;
         }
         return true;
-    }
-
-}
-
-}
-
-class CommentField {
-    public ObjectId id;
-    public ObjectId userID;
-    public ObjectId postID;
-    public String text;
-
-    public CommentField(ObjectId userID, ObjectId postID, String text) {
-        this.id = new ObjectId();
-        this.userID = userID;
-        this.postID = postID;
-        this.text = text;
-    }
-
-    public Document toDocument() {
-        Document document = new Document();
-        document.put("_id", this.id);
-        document.put("userID", this.userID);
-        document.put("postID", this.postID);
-        document.put("text", this.text);
-        return document;
     }
 
 }
