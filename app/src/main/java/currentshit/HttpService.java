@@ -5,9 +5,12 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
+import com.google.gson.Gson;
 import com.sun.net.httpserver.*;
 
+import currentshit.dao.Users;
 import currentshit.handlers.ApiHandler;
 import currentshit.util.FileManager;
 
@@ -79,8 +82,6 @@ public class HttpService {
     public HttpService(int port) throws IOException {
         this.server = HttpServer.create(new InetSocketAddress(port), 0);
         this.server.createContext("/", new LogHandler(new StaticHandler()));
-        this.server.createContext("/login", new LogHandler(new LoginHandler(null)));
-        this.server.createContext("/register", new LogHandler(new RegisterHandler(null)));
         this.server.createContext("/api", new LogHandler(new ApiHandler(null)));
         this.server.start();
     }
@@ -153,7 +154,22 @@ class RegisterHandler implements HttpHandler {
             }
             HttpService.serve(exchange, 200, null, buffer);
             return;
-        }
+        }else if(exchange.getRequestMethod().equals("POST")) {
+            Map<String, String> body = new Gson().fromJson(new String(exchange.getRequestBody().readAllBytes()), Map.class);
+            String username = body.get("username");
+            String password = body.get("password");
+            String email = body.get("email");
+            if(username == null || password == null || email == null){
+                HttpService.sendErrorResponse(exchange, 400, null, "Bad Request.".getBytes());
+                return;
+            }
+            boolean success = Users.create(username, password, email);
+            if(!success){
+                HttpService.sendErrorResponse(exchange, 400, null, "Bad Request.".getBytes());
+                return;
+            }
+            HttpService.serve(exchange, 200, "text/plain", "Successfully registered.".getBytes());
+        }        
     }    
 
 }

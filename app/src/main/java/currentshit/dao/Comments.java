@@ -64,11 +64,11 @@ public class Comments {
         try{
             CommentField commentField = new CommentField(userID, postID, data);
             MongoDatabase database = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME).withCodecRegistry(MongoService.pojoCodecRegistry);
-            MongoCollection collection = database.getCollection(MongoService.COLLECTION_COMMENTS);
+            MongoCollection<CommentField> collection = database.getCollection(MongoService.COLLECTION_COMMENTS, CommentField.class);
             collection.insertOne(commentField);
 
-            MongoCollection userCollection = database.getCollection(MongoService.COLLECTION_USERS);
-            MongoCollection postCollection = database.getCollection(MongoService.COLLECTION_POSTS);
+            MongoCollection<CommentField> userCollection = database.getCollection(MongoService.COLLECTION_USERS, CommentField.class);
+            MongoCollection<CommentField> postCollection = database.getCollection(MongoService.COLLECTION_POSTS, CommentField.class);
 
             userCollection.updateOne(Filters.eq("userID",userID), new Document("$push", new Document("comments", commentField.id)));
             postCollection.updateOne(Filters.eq("postID",postID), new Document("$push", new Document("comments", commentField.id)));

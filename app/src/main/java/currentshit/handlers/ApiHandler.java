@@ -3,11 +3,8 @@ package currentshit.handlers;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.*;
 
-import org.bson.Document;
 
-import currentshit.App;
 import currentshit.HttpService;
-import currentshit.MongoService;
 import currentshit.dao.CommentField;
 import currentshit.dao.Comments;
 import currentshit.dao.PostField;
@@ -16,7 +13,6 @@ import currentshit.dao.UserField;
 import currentshit.dao.Users;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Map;
 
 public class ApiHandler implements HttpHandler {
@@ -111,9 +107,7 @@ public class ApiHandler implements HttpHandler {
                     }
                 }
                 StringBuilder builder = new StringBuilder();
-                System.out.println("Request for comment.");
                 CommentField[] comments = Comments.getByPostID(postID);
-                System.out.println("Request for comment2.");
                 if(comments.length == 0){
                     builder.append("[]");
                 }else{

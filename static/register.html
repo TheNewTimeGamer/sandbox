@@ -16,20 +16,20 @@
         <p>
             Create account
         </p>
-        <form action="/register" method="POST">
+        <form action="javascript:void(0);" onsubmit="register()">
             Username
-            <input type="text" name="username">
+            <input id="username" type="text" name="username">
             <br>
             Password
-            <input type="password" name="password">
+            <input id="password" type="password" name="password">
             <br>
             Repeat Password
-            <input type="password" name="password">
+            <input id="confirmPassword" type="password" name="password">
             <br>
             <hr>
             <br>
             E-mail
-            <input type="email" name="email">
+            <input id="email" type="email" name="email">
             <br>
             <br>
             <input type="submit" value="Register">
@@ -38,4 +38,5 @@
     </div>
 </body>
 <script type="text/javascript" src="currentshit.js"></script>
+<script type="text/javascript" src="register.js"></script>
 </html>
