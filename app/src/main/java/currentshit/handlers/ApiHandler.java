@@ -3,6 +3,7 @@ package currentshit.handlers;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.*;
 
+import org.bson.types.ObjectId;
 
 import currentshit.HttpService;
 import currentshit.dao.CommentField;
@@ -11,8 +12,10 @@ import currentshit.dao.PostField;
 import currentshit.dao.Posts;
 import currentshit.dao.UserField;
 import currentshit.dao.Users;
+import currentshit.util.QueryMap;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 public class ApiHandler implements HttpHandler {
@@ -54,45 +57,47 @@ public class ApiHandler implements HttpHandler {
         if(exchange.getRequestURI().getPath().equals("/api/posts")){
             if(exchange.getRequestMethod().equals("GET")){
                 String[] tags = new String[0];
-                String query = exchange.getRequestURI().getQuery();
-                if(query != null){
-                    if(query.contains("tags=")){
-                        String raw = query.split("tags=")[1];
-                        if(raw.contains(",")){
-                            tags = raw.split(",");
-                        }else{
-                            tags = new String[]{raw};
-                        }
-                    }
+                QueryMap queryMap = new QueryMap(exchange.getRequestURI().getQuery());
+                System.out.println("Processing Query: " + queryMap.toString());
+                if(queryMap.parameters.containsKey("tags")){
+                    tags = queryMap.parameters.get("tags").split(",");
                 }
                 StringBuilder builder = new StringBuilder();
-                PostField[] posts = Posts.get(tags);
-                System.out.println("found posts: " + posts.length);
+                PostField[] posts = null;
+                if(queryMap.parameters.containsKey("id")){
+                    posts = new PostField[]{Posts.getByID(new ObjectId(queryMap.parameters.get("id")))};
+                }else{
+                    if(queryMap.parameters.containsKey("limit") && queryMap.parameters.containsKey("skip")){
+                        posts = Posts.get(tags, Integer.parseInt(queryMap.parameters.get("skip")), Integer.parseInt(queryMap.parameters.get("limit")));
+                    }else{
+                        posts = Posts.get(tags);
+                    }
+                }
                 if(posts.length == 0){
                     builder.append("[]");
                 }else{
                     Gson gson = new Gson();
+                    builder.append("[");
                     for(int i = 0; i < posts.length; i++){
                         builder.append(gson.toJson(posts[i]));
-                        if(i != posts.length-1){
+                        if(i < posts.length-1){
                             builder.append(",");
                         }
                     }
+                    builder.append("]");
                 }
+                System.out.println("Sending: " + builder.toString());
                 HttpService.serve(exchange, 200, "text/json", builder.toString().getBytes());
             }else if(exchange.getRequestMethod().equals("POST")){
-                Map<String, String> body = new Gson().fromJson(new String(exchange.getRequestBody().readAllBytes()), Map.class);
-                if(body.get("title") == null || body.get("content") == null || body.get("tags") == null){
+                System.out.println("Processing post request");
+                PostQuery postQuery = new Gson().fromJson(new String(exchange.getRequestBody().readAllBytes()), PostQuery.class);
+                if(postQuery.title == null || postQuery.content == null || postQuery.tags == null || postQuery.userId == null){
                     HttpService.sendErrorResponse(exchange, 400, null, "Missing title, content or tags.".getBytes());
                     return;
                 }
-                String[] tags = null;
-                if(body.get("tags").contains(",")){
-                    tags = body.get("tags").split(",");
-                }else{
-                    tags = new String[]{body.get("tags")};
-                }
-                boolean success = Posts.create(body.get("title"), body.get("userid"), body.get("content"), tags);
+
+                System.out.println("creating post request");
+                boolean success = Posts.create(postQuery.title, postQuery.userId, postQuery.content, postQuery.tags);
                 HttpService.serve(exchange, 200, "text/plain", new String("Done! " + success).getBytes());
             }
         }
@@ -131,4 +136,11 @@ public class ApiHandler implements HttpHandler {
             }
         }
     }
+}
+
+class PostQuery {
+    public String title;
+    public String content;
+    public String userId;
+    public String[] tags;
 }

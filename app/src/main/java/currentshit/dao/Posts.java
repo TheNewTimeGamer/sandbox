@@ -27,6 +27,18 @@ public class Posts {
         return documents.toArray(new PostField[documents.size()]);
     }
 
+    public static PostField[] get(String[] tags, int skip, int limit) {
+        System.out.println("Getting posts with tags: " + tags + " skip: " + skip + " limit: " + limit);
+        MongoDatabase db = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME).withCodecRegistry(MongoService.pojoCodecRegistry);
+        MongoCollection<PostField> collection = db.getCollection(MongoService.COLLECTION_POSTS, PostField.class);
+        MongoCursor<PostField> cursor = collection.find(Filters.in("tags", tags)).skip(skip).limit(limit).iterator();
+        ArrayList<PostField> documents = new ArrayList<PostField>();
+        while(cursor.hasNext()) {
+            documents.add(cursor.next());
+        }
+        return documents.toArray(new PostField[documents.size()]);
+    }
+
     public static PostField getByID(ObjectId postID) {
         MongoDatabase db = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME).withCodecRegistry(MongoService.pojoCodecRegistry);
         MongoCollection<PostField> collection = db.getCollection(MongoService.COLLECTION_POSTS, PostField.class);
@@ -56,7 +68,7 @@ public class Posts {
         }catch(Exception e){
             e.printStackTrace();
             return false;
-        }
+            }
         return true;
     }
 

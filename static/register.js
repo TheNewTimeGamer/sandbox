@@ -21,16 +21,19 @@ function register() {
     const passwordCheck = validatePassword(password, confirmPassword);
     if(!passwordCheck){return;}
     registerUser(username, password, email).then(response => {
-        if (response.success) {
-            window.location.href = '/';
+        if (response.status == 200) {
+            console.log("Successfully registered user");
+            //window.location.href = '/';
         } else {
-            window.location.href = '/something-went-wrong.html';
+            console.log("Failed to register user");
+            //window.location.href = '/something-went-wrong.html';
         }
     });
 }
 
 async function registerUser(username, password, email) {
-    const response = await fetch('/api/register', {
+    console.log("Registering user..");
+    const response = await fetch('/api/users', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -41,5 +44,5 @@ async function registerUser(username, password, email) {
             email: email
         })
     });
-    return response.json();
+    return response;
 }
