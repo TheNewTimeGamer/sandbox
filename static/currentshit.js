@@ -1,5 +1,7 @@
 let skip = 0;
 
+const page = document.getElementById("page");
+
 const categoryElements = document.getElementsByClassName("category");
 const categories = {};
 for(const category of categoryElements){
@@ -35,13 +37,14 @@ function toggleCategory(e) {
 }
 
 fetchInitial().then(response => response.json()).then(posts => {
-    console.log(posts);
     for(const post of posts){
-
+        page.appendChild(createPost(post));
     }
 });
 
-
-function showMemes(json) {
-    console.log(json);
+function createPost(post) {
+    const postElement = document.createElement("div");
+    postElement.classList.add("post");
+    postElement.innerHTML = "<h3>" + post.title + "</h3><div>" + post.content + "</div>";
+    return postElement;
 }

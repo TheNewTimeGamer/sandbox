@@ -58,7 +58,6 @@ public class ApiHandler implements HttpHandler {
             if(exchange.getRequestMethod().equals("GET")){
                 String[] tags = new String[0];
                 QueryMap queryMap = new QueryMap(exchange.getRequestURI().getQuery());
-                System.out.println("Processing Query: " + queryMap.toString());
                 if(queryMap.parameters.containsKey("tags")){
                     tags = queryMap.parameters.get("tags").split(",");
                 }
@@ -86,17 +85,13 @@ public class ApiHandler implements HttpHandler {
                     }
                     builder.append("]");
                 }
-                System.out.println("Sending: " + builder.toString());
                 HttpService.serve(exchange, 200, "text/json", builder.toString().getBytes());
             }else if(exchange.getRequestMethod().equals("POST")){
-                System.out.println("Processing post request");
                 PostQuery postQuery = new Gson().fromJson(new String(exchange.getRequestBody().readAllBytes()), PostQuery.class);
                 if(postQuery.title == null || postQuery.content == null || postQuery.tags == null || postQuery.userId == null){
                     HttpService.sendErrorResponse(exchange, 400, null, "Missing title, content or tags.".getBytes());
                     return;
                 }
-
-                System.out.println("creating post request");
                 boolean success = Posts.create(postQuery.title, postQuery.userId, postQuery.content, postQuery.tags);
                 HttpService.serve(exchange, 200, "text/plain", new String("Done! " + success).getBytes());
             }

@@ -90,3 +90,9 @@ nav div {
     background-color: rgb(49,49,49);
     color: whitesmoke;
 }
+
+.post {
+    display: inline-block;
+    width: 100%;
+    min-height: 35%;
+}
