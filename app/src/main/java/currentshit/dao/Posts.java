@@ -28,7 +28,6 @@ public class Posts {
     }
 
     public static PostField[] get(String[] tags, int skip, int limit) {
-        System.out.println("Getting posts with tags: " + tags + " skip: " + skip + " limit: " + limit);
         MongoDatabase db = MongoService.instance.mongoClient.getDatabase(MongoService.DATABASE_NAME).withCodecRegistry(MongoService.pojoCodecRegistry);
         MongoCollection<PostField> collection = db.getCollection(MongoService.COLLECTION_POSTS, PostField.class);
         MongoCursor<PostField> cursor = collection.find(Filters.in("tags", tags)).skip(skip).limit(limit).iterator();

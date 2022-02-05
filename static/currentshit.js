@@ -8,9 +8,14 @@ for(const category of categoryElements){
     categories[category.innerText] = {dom: category, enabled: true};
 }
 
-async function fetchInitial() {
-    const response = await fetch("/api/posts?skip=" + skip + "&limit=10&tags=" + Object.keys(categories).filter(key => categories[key].enabled).join(",").toLowerCase());
-    skip += 10;
+async function fetchInitial(noskip) {
+    let response = null;
+    if(noskip){
+        response = await fetch("/api/posts?skip=" + 0 + "&limit=10&tags=" + Object.keys(categories).filter(key => categories[key].enabled).join(",").toLowerCase());
+    }else{
+        response = await fetch("/api/posts?skip=" + skip + "&limit=10&tags=" + Object.keys(categories).filter(key => categories[key].enabled).join(",").toLowerCase());
+        skip += 10;
+    }
     return response;
 }
 
@@ -34,9 +39,15 @@ function toggleCategory(e) {
         category.dom.classList.remove("bar-light-color");
         category.dom.classList.add("bar-mid-color");
     }
+    fetchInitial(true).then(response => response.json()).then(posts => {
+        page.innerHTML = "";
+        for(const post of posts){
+            page.appendChild(createPost(post));
+        }
+    });
 }
 
-fetchInitial().then(response => response.json()).then(posts => {
+fetchInitial(false).then(response => response.json()).then(posts => {
     for(const post of posts){
         page.appendChild(createPost(post));
     }
