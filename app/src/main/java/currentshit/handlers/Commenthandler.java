@@ -8,6 +8,7 @@ import com.google.gson.Gson;
 import currentshit.HttpService;
 import currentshit.dao.CommentField;
 import currentshit.dao.Comments;
+import currentshit.util.QueryMap;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -16,14 +17,8 @@ public class Commenthandler implements HttpHandler {
 
     public void handle(HttpExchange exchange) throws IOException{
         if(exchange.getRequestMethod().equals("GET")){
-            String postID = null;
-            String query = exchange.getRequestURI().getQuery();
-            if(query != null){
-                if(query.contains("postid=")){
-                    postID = query.split("postid=")[1];
-                    // TODO: implements class to handle get queries and parse them to a map.
-                }
-            }
+            QueryMap queryMap = new QueryMap(exchange.getRequestURI().getQuery());
+            String postID = queryMap.parameters.get("postid");
             StringBuilder builder = new StringBuilder();
             CommentField[] comments = Comments.getByPostID(postID);
             if(comments.length == 0){

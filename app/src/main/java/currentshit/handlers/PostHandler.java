@@ -60,3 +60,10 @@ public class PostHandler implements HttpHandler {
     }
 
 }
+
+class PostQuery {
+    public String title;
+    public String content;
+    public String userId;
+    public String[] tags;
+}
